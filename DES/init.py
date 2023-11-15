@@ -1,1 +1,1 @@
-__all__=["DES_list_select", "exit_btn","new_screen"]
+__all__=["select_pane", "exit_btn","new_screen"]
