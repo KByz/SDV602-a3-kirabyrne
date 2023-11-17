@@ -2,14 +2,18 @@
 Open new DES from initiated DES.
 """
 
-def open_des():
-    from view.data_explorer_view import DES_View
+import sys
+sys.dont_write_bytecode = True
+import PySimpleGUI as sg
 
-    steadfast = True
+def open_des(event, values, state):
+    from view.data_view import DES_win
+
+    keep_going = True
     if event == 'New DES':
-        des_obj = DES_View()
-        des_obj.layout()
-        des.obj.render()
+        des_obj = DES_win()
+        des_obj.set_up_layout()
+        des_obj.render()
         des_obj.take_input()
-    return steadfast
+    return keep_going
 

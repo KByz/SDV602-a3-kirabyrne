@@ -5,12 +5,12 @@ The full background app.
 import sys
 sys.dont_write_bytecode = True
 from typing import Text
-#import view.ChartExamples as ce INTO your mock data
+import view.graph_exp as ge
 import DES.new_screen as ns
 import DES.select_pane as sp
 import PySimpleGUI as sg
 import inspect
-import csv.opn_file as open_file
+import file_select.opn_file as open_file
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -23,15 +23,18 @@ class DES_win(object):
     def __init__(self):
 
         self.window = None
-        self.figure_agg = None
+        self.graph_agg = None
         self.layout = []
         self.components = {"has_components":False}
         self.controls = []
         self.my_lastfig = None
         """
         CHART EXAMPLES
-        self.fig_dict = {'Line Plot':(ce.line_plot)}
         """
+        self.graph_dict = {'Bar Chart':(ge.bar_graph,{}),
+        'Trend Chart':(ge.trend_chart,{}), 
+        'Pie Chart':(ge.pie_graph,{})}
+
         DES_win.current_win +=1
         DES_win.des_list += [self]
     
@@ -43,7 +46,7 @@ class DES_win(object):
             self.components[component_name].update(text)
     
     def update_current_data(self,values,file_name=None, **kwargs):
-        if self.have_select_graph(values) :
+        if self.graph_selected(values) :
             the_file_name = file_name
             choice = values['-GRAPH LIST-'][0]
             (func,args) = self.graph_dict[choice]
@@ -60,20 +63,20 @@ class DES_win(object):
             self.graph_dict[choice] = (func,args)
             self.draw_graph_list(values)
 
-    def draw_graph(self, canvas, figrue):
-        graph_canvas_agg = FigureCanvasTkAgg(figrue, canvas)
+    def draw_graph(self, canvas, graph):
+        graph_canvas_agg = FigureCanvasTkAgg(graph, canvas)
         graph_canvas_agg.draw()
-        graph_canvas_agg.get_th_widget().pack(side='top', fill='both', exapand=1)
+        graph_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
         return graph_canvas_agg
         
-    def close_graph(self, fig_agg):
+    def close_graph(self, graph_agg):
         if self.graph_agg:
          self.graph_agg.get_th_widget().forget()
         plt.close('all')
     
     def draw_graph_list(self, values):
 
-        if self.have_selected_graph(values):
+        if self.graph_selected(values):
             choice = values['-GRAPH LIST-'][0]
             func_tuple = self.graph_dict[choice]
             kwargs = func_tuple[1]
@@ -81,11 +84,11 @@ class DES_win(object):
             func = func_tuple[0]
 
             self.window['-MULTILINE-'].update(inspect.getsource(func))
-            self.window['-GRAPH NAME-'].update(choice)
+            self.window['-GRAPH LIST-'].update(choice)
 
             fig = func(**kwargs)
 
-            self.close_graph(self.figure_agg)
+            self.close_graph(self.graph_agg)
 
             the_file_name = "No Data"
             if 'file_name' in kwargs:
@@ -98,18 +101,18 @@ class DES_win(object):
 
         sg.theme('Darkgrey')
         figure_w, figure_h = 500, 500
-        listbox_values = ['Trend Chart', 'Bar Chart', 'Pie Chart']
+        listbox_values = list(self.graph_dict)
         print(f"GOT List box {listbox_values}")
-        self.components['graphs_list'] = sg.Listbox(values==listbox_values, enable_events=True, size=(30, len(listbox_values)), key='-GRAPH LIST-')
-        self.controls += [graphs_list_select.accept]
+        self.components['graphs_list'] = sg.Listbox(values=listbox_values, enable_events=True, size=(30, len(listbox_values)), key='-GRAPH LIST-')
+        self.controls += [sp.accept]
 
         self.components['text_spacer'] = sg.Text(' ', size=(30,1)) # check orginal code
         self.components['new_screen'] = sg.Button(button_text="New Graph Screen", size=(10,2))
-        self.controls += [new_screen.accept]
+        self.controls += [ns.open_des]
         self.components['file_name'] = sg.Text('No data to display', size=(30,1), key='-FILE NAME-')
         self.components['graph_name'] = sg.Text('No graph selected', size=(30,1), key='-GRAPH NAME-')
         self.components['select_file'] = sg.Button(button_text="Select CSV file", size=(10,2))
-        self.controls += [select_file.accept]
+        self.controls += [open_file.accept]
 
         col_listbox = [
                     [self.components['graphs_list']],
@@ -118,11 +121,12 @@ class DES_win(object):
                  ]
         self.components['header'] =  sg.Text(f'DES {DES_win.current_win}', size=(30,1), font=("Helvetica", 25))
         self.components['list_box_padding'] = sg.Col(col_listbox, pad=(5, (3, 330)))
-        self.components['canvas'] = sg.Canvas(size=(70, 35), pad=(5, (3, 90)), key='-MULTILINE-')
+        self.components['canvas'] = sg.Canvas(size=(figure_w, figure_h), key='-CANVAS-')
+        self.components['MLine'] = sg.MLine(size=(70, 35), pad=(5, (3, 90)), key='-MULTILINE-')
         self.layout = [
-                [self.components['header']], [self.components['data_file_name']],
-                [self.components['list_box_padding'],self.compoents['canvas'],
-                 self.componants['MLine']]
+                [self.components['header']], [self.components['file_name']],
+                [self.components['list_box_padding'],self.components['canvas'],
+                 self.components['MLine']]
 
                 ]
     def render(self):
@@ -130,14 +134,15 @@ class DES_win(object):
                 self.window =sg.Window(f"DES {DES_win.current_win}", self.layout, finalize=True)
 
     def accept_input(self):
+            
             if self.window != None :
                 keep_going = True
 
                 while keep_going == True:
                     event, values = self.window.read()
-                    for accept_conteols in self.controls:
+                    for accept_control in self.controls:
                         keep_going = accept_control(event,values,{'view':self})
-                    self.window.close()
+                self.window.close()
             
 
 
