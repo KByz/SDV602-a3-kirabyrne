@@ -3,16 +3,16 @@ Display example graphs when opening the inital DES
 ploulated with mock transport data. 
 """
 
+import numpy as np
+import matplotlib.pyplot as plt
 import sys
 sys.dont_write_bytecode = True
 
-import matplotlib.pyplot as plt
-import numpy as np
 
 def bar_graph(**kwargs):
     """
     Plot an example bar graph in DES.
-    
+
     """
     transport_modes = ['Car', 'Bike', 'Public Transport', 'Walk']
     y_pos = np.arange(len(transport_modes))
@@ -33,19 +33,21 @@ def pie_graph(**kwargs):
     Plot an eaxmple pie chart in initial DES
     poulated with transport data.
     """
-    lables = 'Car', 'Bike', 'Public Transport', 'Walk'
+    labels = ['Car', 'Bike', 'Public Transport', 'Walk']
     sizes = [10, 7, 5, 3]
-    sizes.append(100 - sum(sizes))
+    # sizes.append(100 - sum(sizes)) << ?? This makes sizes longer than the labels?
     explode = (0.1, 0, 0, 0)
 
     graph1, ax1 = plt.subplots()
-    ax1.pie(sizes, explode=explode, lables=lables, autopct='%1.1f%%',
-             shadow=True, startangle=0)
-    ax1.axis('equal') #Levels the aspect ratio of the pie chart to make it a perfect circle.
+    ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
+            shadow=True, startangle=0)
+    # Levels the aspect ratio of the pie chart to make it a perfect circle.
+    ax1.axis('equal')
 
     plt.title('Transport Pie Chart 2023')
 
     return plt.gcf()
+
 
 def trend_chart(**kwargs):
     Bus = {
@@ -59,6 +61,7 @@ def trend_chart(**kwargs):
     ax.set_title("Bus Passangers Per Year")
     return plt.gcf()
 
+
 def show_plot(pFigureFunction, **kwargs):
     """
     Display chosen graph in canvas pane.
@@ -71,22 +74,21 @@ def show_plot(pFigureFunction, **kwargs):
     plt.figure(current_graph.number)
     plt.show()
 
+
 def graph_w_kwargs(pFigureFunction, **kwargs):
     """
     Plot with keyword arguments.
     """
     kwarg_fig = None
-    if kwargs :
+    if kwargs:
         kwarg_fig = pFigureFunction(**kwargs)
     else:
         kwarg_fig = pFigureFunction()
     return kwarg_fig
+
 
 if __name__ == "__main__":
     show_plot(trend_chart)
     show_plot(bar_graph)
     show_plot(pie_graph)
     pass
-
-
-
